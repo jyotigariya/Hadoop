@@ -14,9 +14,9 @@ Facility_Cols = FOREACH hosp_emergengy_inp GENERATE YEAR, FACILITY_NAME, ED_VISI
 
 year_facility_grp = GROUP Facility_Cols BY (YEAR, FACILITY_NAME);
 
-facility_counts = FOREACH year_facility_grp GENERATE FLATTEN(group), COUNT(Facility_Cols.ED_VISITS_NOT_ADMITTED) as not_admitted, COUNT(Facility_Cols.ADMISSIONS_FROM_ED) AS admissions;
+facility_sum = FOREACH year_facility_grp GENERATE FLATTEN(group), SUM(Facility_Cols.ED_VISITS_NOT_ADMITTED) as not_admitted, SUM(Facility_Cols.ADMISSIONS_FROM_ED) AS admissions;
 
-admit_percent = FOREACH facility_counts GENERATE group.YEAR, group.FACILITY_NAME, not_admitted, admissions, ((admissions/not_admitted) *  100) admit_percent; 
+admit_percent = FOREACH facility_sum GENERATE group.YEAR, group.FACILITY_NAME, not_admitted, admissions, ((admissions/not_admitted) *  100) admit_percent; 
 
 
 rmf dist_facility_nm
