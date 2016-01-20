@@ -13,4 +13,15 @@ STORE discharge_by_year_facility into 'discharge_by_year_facility' USING PigStor
 -- Find number of discharge's by year, race, facility and find the race with the maximum discharge's
 year_facility_race_grp = GROUP patient_disc_inp BY (Year, OSHPD_Facility_Number, Race_Group);
 
-FOREACH year_facility_race_grp GENERATE FLATTEN(group), 
+discharge_max = FOREACH year_facility_race_grp GENERATE FLATTEN(group), SUM(patient_disc_inp.Count) as total_discharges, MAX(patient_disc_inp.Count) as max_count;
+
+join_counts = JOIN discharge_max BY (group.Year, group.OSHPD_Facility_Number, max_count), patient_disc_inp(year, OSHPD_Facility_Number, Count);
+
+max_discharge_race = FOREACH join_counts GENERATE 
+						discharge_max::group::Year, 
+						discharge_max::group::OSHPD_Facility_Number, 
+						discharge_max::max_count,
+						discharge_max::total_discharges,
+						patient_disc_inp::Race_Group;
+
+STORE max_discharge_race into 'max_discharge_race' USING PigStorage('|');
