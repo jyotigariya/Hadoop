@@ -1,0 +1,30 @@
+CA_inpatient_moraltiy_rates = LOAD '/user/data/California_Statewide_Inpatient_Mortality_Rates__2012-2013.csv' USING PigStorage(',') AS (Year:int,Hospital:chararray,Procedure_Condition:chararray,Risk_Adjusted_Mortality_Rate:chararray,No_ofDeaths:int,No_ofCases:int);
+
+--TO FIND MAX No OF DEATHS BY A PROCEDURE CONDITION
+
+CA_col = Foreach CA_inpatient_moraltiy_rates Generate 1 ,Procedure_Condition,No_ofDeaths;
+--Dump CA_col;
+
+grp_CA = Group CA_col by 1;
+--Describe grp_CA;
+--Dump grp_CA;
+
+flatten_col = Foreach grp_CA Generate Flatten(CA_col), MAX(CA_col.No_ofDeaths) AS MaxDeaths;
+--Dump flatten_col;
+--Describe flatten_col;
+
+filter_col = Filter flatten_col by(CA_col::No_ofDeaths==MaxDeaths);
+--Dump filter_col;
+--Describe filter_col;
+
+result = Foreach filter_col Generate CA_col::Procedure_Condition,MaxDeaths;
+Dump result;
+
+
+--TO FIND HOW MANY PROCEDURE CONDITION
+
+A = Group CA_inpatient_moraltiy_rates by Procedure_Condition;
+C =Distinct A;
+Dump C;
+B = Foreach A Generate group, (chararray)COUNT(CA_inpatient_moraltiy_rates);
+Dump B;
